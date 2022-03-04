@@ -10,9 +10,9 @@ interface IERC20 {
     function transfer(address recipient, uint amount) external returns (bool);
 
     /********************* Optional *********************/
-    // function allowance(address owner, address spender) external view returns (uint);
-    // function approve(address spender, uint amount) external returns (bool);
-    // function transferFrom(address sender, address recipient, uint amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint);
+    function approve(address spender, uint amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint amount) external returns (bool);
 
     /********************* Event *********************/
     event Transfer(address indexed from, address indexed to, uint value);
@@ -28,6 +28,10 @@ contract Token is IERC20 {
     uint public override totalSupply;
     address public founder;
     mapping(address => uint) public balances;
+    mapping(address => mapping(address => uint)) allowed;
+
+    // 0x111 (owner) allows 0x222 (spender) -> 100 tokens
+    // allowed[0x111][0x222] = 100;
 
     constructor() {
         totalSupply = 1000000; // = 1,000,000
@@ -35,8 +39,8 @@ contract Token is IERC20 {
         balances[founder] = totalSupply;
     }
 
-    function balanceOf(address tokenOwner) public view override returns (uint balance) {
-        return balances[tokenOwner];
+    function balanceOf(address owner) public view override returns (uint balance) {
+        return balances[owner];
     }
 
     function transfer(address recipient, uint amount) public override returns (bool success) {
@@ -46,6 +50,32 @@ contract Token is IERC20 {
         balances[msg.sender] -= amount;
 
         emit Transfer(msg.sender, recipient, amount);
+
+        return true;
+    }
+
+    function allowance(address owner, address spender) view public override returns  (uint) {
+        return allowed[owner][spender];
+    }
+
+    function approve(address spender, uint amount) public override returns (bool success) {
+        require(balances[msg.sender] >= amount);
+        require(amount > 0);
+
+        allowed[msg.sender][spender] = amount;
+
+        emit Approval(msg.sender, spender, amount);
+
+        return true;
+    }
+
+    function transferFrom(address sender, address recipient, uint amount) public override returns (bool success) {
+        require(allowed[sender][recipient] >= amount);
+        require(balances[sender] >= amount);
+
+        balances[sender] -= amount;
+        balances[recipient] += amount;
+        allowed[sender][recipient] -= amount;
 
         return true;
     }
