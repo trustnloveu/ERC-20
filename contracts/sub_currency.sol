@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity >= 0.7.0 < 0.9.0;
-
-
-pragma solidity ^0.8.4;
 
 contract Coin {
 
@@ -32,13 +28,13 @@ contract Coin {
     }
 
     // `Error` allows you to provide information about why an operation failed. They are returned to the caller of the function.
-    error InsufficientBalance(uint requested, uint available);
+    error insufficientBalance(uint requested, uint available);
 
     // Send an amount of existing coins from any caller to an address
     function send(address receiver, uint amount) public {
         
         if (amount > balances[msg.sender]) {
-            revert InsufficientBalance(
+            revert insufficientBalance(
                 {
                     requested: amount,
                     available: balances[msg.sender]
